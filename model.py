@@ -148,31 +148,35 @@ class MODEL:
                 exit(1)
             flag = 1
             endSign = {-1: "，", 1: "。"}
-            poem = ''
-            state = sess.run(stackCell.zero_state(1, tf.float32))
-            x = np.array([[self.trainData.wordToID['[']]])
-            probs1, state = sess.run([probs, finalState], feed_dict={gtX: x, initState: state})
-            for word in characters:
-                if self.trainData.wordToID.get(word) == None:
-                    print("胖虎不认识这个字，你真是文化人！")
-                    exit(0)
-                flag = -flag
-                while word not in [']', '，', '。', ' ', '？', '！']:
-                    poem += word
-                    x = np.array([[self.trainData.wordToID[word]]])
-                    probs2, state = sess.run([probs, finalState], feed_dict={gtX: x, initState: state})
-                    word = self.probsToWord(probs2, self.trainData.words)
+            for i in range(generateNum):
+                poem = ''
+                state = sess.run(stackCell.zero_state(1, tf.float32))
+                x = np.array([[self.trainData.wordToID['[']]])
+                probs1, state = sess.run([probs, finalState], feed_dict={gtX: x, initState: state})
+                tmpArray = characters
+                if len(tmpArray)%2 == 1 :
+                    word = self.probsToWord(probs1, self.trainData.words)
+                    tmpArray +=word
+                for word in tmpArray:
+                    if self.trainData.wordToID.get(word) == None:
+                        print("胖虎不认识这个字，你真是文化人！")
+                        exit(0)
+                    flag = -flag
+                    while word not in [']', '，', '。', ' ', '？', '！']:
+                        poem += word
+                        x = np.array([[self.trainData.wordToID[word]]])
+                        probs2, state = sess.run([probs, finalState], feed_dict={gtX: x, initState: state})
+                        word = self.probsToWord(probs2, self.trainData.words)
 
-                poem += endSign[flag]
-                # keep the context, state must be updated
-                if endSign[flag] == '。':
-                    probs2, state = sess.run([probs, finalState],
-                                             feed_dict={gtX: np.array([[self.trainData.wordToID["。"]]]), initState: state})
-                    poem += '\n'
-                else:
-                    probs2, state = sess.run([probs, finalState],
-                                             feed_dict={gtX: np.array([[self.trainData.wordToID["，"]]]), initState: state})
-
-            print(characters)
-            print(poem)
+                    poem += endSign[flag]
+                    # keep the context, state must be updated
+                    if endSign[flag] == '。':
+                        probs2, state = sess.run([probs, finalState],
+                                                 feed_dict={gtX: np.array([[self.trainData.wordToID["。"]]]), initState: state})
+                        poem += '\n'
+                    else:
+                        probs2, state = sess.run([probs, finalState],
+                                                feed_dict={gtX: np.array([[self.trainData.wordToID["，"]]]), initState: state})
+                print(characters)
+                print(poem)
             return poem
